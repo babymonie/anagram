@@ -9,11 +9,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "apiwrap.h"
 #include "api/api_text_entities.h"
-#include "core/application.h"
-#include "core/core_settings.h"
 #include "data/data_channel.h"
 #include "data/data_document.h"
-#include "data/data_media_types.h"
 #include "data/data_peer.h"
 #include "data/data_session.h"
 #include "history/history.h"
@@ -24,14 +21,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
 #include "spellcheck/spellcheck_types.h"
-
-#include <QtCore/QFile>
-#include <QtCore/QJsonDocument>
-#include <QtCore/QJsonObject>
-#include <QtNetwork/QHttpMultiPart>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkReply>
-#include <QtNetwork/QNetworkRequest>
 
 namespace Api {
 
@@ -181,93 +170,8 @@ void Transcribes::apply(const MTPDupdateTranscribedAudio &update) {
 	}
 }
 
-void Transcribes::loadWithWhisper(not_null<HistoryItem*> item) {
-	const auto id = item->fullId();
-	const auto doc = item->media() ? item->media()->document() : nullptr;
-	if (!doc) {
-		return;
-	}
-	const auto path = doc->filepath();
-	if (path.isEmpty()) {
-		auto &entry = _map[id];
-		entry.result = u"Voice message not yet downloaded. Please play it first."_q;
-		entry.failed = false;
-		entry.pending = false;
-		_session->data().requestItemResize(item);
-		return;
-	}
-	auto &entry = _map[id];
-	entry.pending = true;
-	_session->data().requestItemResize(item);
-
-	const auto url = Core::App().settings().whisperApiUrl();
-	const auto key = Core::App().settings().whisperApiKey();
-	if (!_whisperNetwork) {
-		_whisperNetwork = std::make_unique<QNetworkAccessManager>();
-	}
-	auto *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
-	QHttpPart filePart;
-	filePart.setHeader(
-		QNetworkRequest::ContentDispositionHeader,
-		QVariant(u"form-data; name=\"file\"; filename=\"audio.ogg\""_q));
-	filePart.setHeader(
-		QNetworkRequest::ContentTypeHeader,
-		QVariant(u"audio/ogg"_q));
-	auto *file = new QFile(path);
-	if (!file->open(QIODevice::ReadOnly)) {
-		delete file;
-		delete multiPart;
-		auto &e = _map[id];
-		e.result = u"Could not open audio file."_q;
-		e.pending = false;
-		e.failed = true;
-		_session->data().requestItemResize(item);
-		return;
-	}
-	file->setParent(multiPart);
-	filePart.setBodyDevice(file);
-	multiPart->append(filePart);
-
-	QHttpPart modelPart;
-	modelPart.setHeader(
-		QNetworkRequest::ContentDispositionHeader,
-		QVariant(u"form-data; name=\"model\""_q));
-	modelPart.setBody("whisper-1");
-	multiPart->append(modelPart);
-
-	auto networkRequest = QNetworkRequest(
-		QUrl(url + u"/v1/audio/transcriptions"_q));
-	if (!key.isEmpty()) {
-		networkRequest.setRawHeader(
-			"Authorization",
-			(u"Bearer "_q + key).toUtf8());
-	}
-	const auto reply = _whisperNetwork->post(networkRequest, multiPart);
-	multiPart->setParent(reply);
-	QObject::connect(reply, &QNetworkReply::finished, [=] {
-		auto &e = _map[id];
-		e.pending = false;
-		if (reply->error() != QNetworkReply::NoError) {
-			e.failed = true;
-		} else {
-			const auto body = reply->readAll();
-			const auto parsed = QJsonDocument::fromJson(body);
-			const auto text = parsed.object().value(u"text"_q).toString();
-			e.result = text.isEmpty() ? u"(no transcription)"_q : text;
-		}
-		if (const auto item = _session->data().message(id)) {
-			_session->data().requestItemResize(item);
-		}
-		reply->deleteLater();
-	});
-}
-
 void Transcribes::load(not_null<HistoryItem*> item) {
 	if (!item->isHistoryEntry() || item->isLocal()) {
-		return;
-	}
-	if (!Core::App().settings().whisperApiUrl().isEmpty()) {
-		loadWithWhisper(item);
 		return;
 	}
 	const auto toggleRound = [](not_null<HistoryItem*> item, Entry &entry) {

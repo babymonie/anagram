@@ -10,8 +10,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_text_entities.h"
 #include "apiwrap.h"
 #include "base/options.h"
-#include "core/application.h"
-#include "core/core_settings.h"
 #include "core/shortcuts.h"
 #include "data/data_ai_compose_tones.h"
 #include "data/data_session.h"
@@ -19,13 +17,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_session.h"
 #include "ui/layers/show.h"
 #include "ui/widgets/fields/input_field.h"
-
-#include <QtCore/QJsonArray>
-#include <QtCore/QJsonDocument>
-#include <QtCore/QJsonObject>
-#include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkReply>
-#include <QtNetwork/QNetworkRequest>
 
 namespace Api {
 namespace {
@@ -52,95 +43,10 @@ ComposeWithAi::ComposeWithAi(not_null<ApiWrap*> api)
 , _api(&api->instance()) {
 }
 
-mtpRequestId ComposeWithAi::requestLocal(
-		Request request,
-		Fn<void(Result &&)> done,
-		Fn<void(const MTP::Error &)> fail) {
-	const auto baseUrl = Core::App().settings().aiComposeApiUrl();
-	const auto key = Core::App().settings().aiComposeApiKey();
-	const auto model = Core::App().settings().aiComposeApiModel();
-
-	auto systemPrompt = QString(u"You are a text assistant. Return only the modified text, no explanation."_q);
-	if (request.proofread) {
-		systemPrompt += u" Proofread and correct grammar/spelling."_q;
-	}
-	if (request.emojify) {
-		systemPrompt += u" Add fitting emojis naturally into the text."_q;
-	}
-	if (!request.translateToLang.isEmpty()) {
-		systemPrompt += u" Translate to language code: "_q + request.translateToLang + u"."_q;
-	}
-	if (request.tone && !request.tone->defaultTone.isEmpty()) {
-		systemPrompt += u" Adjust tone to be: "_q + request.tone->defaultTone + u"."_q;
-	}
-
-	auto messages = QJsonArray();
-	messages.append(QJsonObject{
-		{ u"role"_q, u"system"_q },
-		{ u"content"_q, systemPrompt },
-	});
-	messages.append(QJsonObject{
-		{ u"role"_q, u"user"_q },
-		{ u"content"_q, request.text.text },
-	});
-
-	auto body = QJsonObject{
-		{ u"messages"_q, messages },
-	};
-	if (!model.isEmpty()) {
-		body[u"model"_q] = model;
-	}
-
-	if (!_localNetwork) {
-		_localNetwork = std::make_unique<QNetworkAccessManager>();
-	}
-	auto networkRequest = QNetworkRequest(
-		QUrl(baseUrl + u"/v1/chat/completions"_q));
-	networkRequest.setHeader(
-		QNetworkRequest::ContentTypeHeader,
-		u"application/json"_q);
-	if (!key.isEmpty()) {
-		networkRequest.setRawHeader(
-			"Authorization",
-			(u"Bearer "_q + key).toUtf8());
-	}
-	const auto reply = _localNetwork->post(
-		networkRequest,
-		QJsonDocument(body).toJson(QJsonDocument::Compact));
-	QObject::connect(reply, &QNetworkReply::finished, [=, done = done, fail = fail]() mutable {
-		if (reply->error() != QNetworkReply::NoError) {
-			if (fail) {
-				fail(MTP::Error(
-					MTP_rpc_error(MTP_int(0), MTP_string(reply->errorString()))));
-			}
-		} else {
-			const auto responseBody = reply->readAll();
-			const auto parsed = QJsonDocument::fromJson(responseBody);
-			const auto text = parsed
-				.object()
-				.value(u"choices"_q)
-				.toArray()
-				.first()
-				.toObject()
-				.value(u"message"_q)
-				.toObject()
-				.value(u"content"_q)
-				.toString()
-				.trimmed();
-			done(Result{ .resultText = TextWithEntities{ text } });
-		}
-		reply->deleteLater();
-	});
-	return 0;
-}
-
 mtpRequestId ComposeWithAi::request(
 		Request request,
 		Fn<void(Result &&)> done,
 		Fn<void(const MTP::Error &)> fail) {
-	if (!Core::App().settings().aiComposeApiUrl().isEmpty()) {
-		return requestLocal(std::move(request), std::move(done), std::move(fail));
-	}
 	using Flag = MTPmessages_composeMessageWithAI::Flag;
 	auto flags = MTPmessages_composeMessageWithAI::Flags(0);
 	if (request.proofread) {

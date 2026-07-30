@@ -14,7 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <vector>
 
 class ApiWrap;
-class QNetworkAccessManager;
 
 namespace Main {
 class Session;
@@ -86,14 +85,8 @@ private:
 		not_null<Main::Session*> session,
 		const MTPTextWithEntities &text);
 
-	[[nodiscard]] mtpRequestId requestLocal(
-		Request request,
-		Fn<void(Result &&)> done,
-		Fn<void(const MTP::Error &)> fail);
-
 	const not_null<Main::Session*> _session;
 	MTP::Sender _api;
-	std::unique_ptr<QNetworkAccessManager> _localNetwork;
 
 };
 

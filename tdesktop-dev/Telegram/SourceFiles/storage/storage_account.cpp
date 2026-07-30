@@ -1221,7 +1221,9 @@ void EnumerateDrafts(
 		const base::flat_map<Data::DraftKey, MessageDraftSource> &sources,
 		Callback &&callback) {
 	for (const auto &[key, draft] : map) {
-		if (key.isCloud() || sources.contains(key)) {
+		if (draft->hasRichMessage()) {
+			continue;
+		} else if (key.isCloud() || sources.contains(key)) {
 			continue;
 		} else if (key.isLocal()
 			&& (!supportMode || key.topicRootId())) {
@@ -3733,16 +3735,6 @@ void Account::clearPref(std::string_view key) {
 	}
 	_prefs.erase(i);
 	writePrefsDelayed();
-}
-
-void Account::writePrefBytes(
-		std::string_view key,
-		const QByteArray &value) {
-	writePrefGeneric(key, value);
-}
-
-std::optional<QByteArray> Account::readPrefBytes(std::string_view key) {
-	return readPrefGeneric(key);
 }
 
 void Account::writePrefGeneric(

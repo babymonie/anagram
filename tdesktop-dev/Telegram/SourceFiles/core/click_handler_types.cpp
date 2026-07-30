@@ -11,7 +11,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "chat_helpers/bot_command.h"
 #include "core/application.h"
-#include "core/core_settings.h"
 #include "core/local_url_handlers.h"
 #include "core/file_utilities.h"
 #include "mainwidget.h"
@@ -45,7 +44,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QDateTime>
 #include <QtCore/QLocale>
-#include <QtCore/QUrlQuery>
 
 namespace {
 
@@ -87,34 +85,6 @@ constexpr auto kReminderSetToastDuration = 4 * crl::time(1000);
 
 [[nodiscard]] bool HiddenUrlRequiresConfirmation(const QUrl &url) {
 	return UrlRequiresConfirmation(url) || IsTelegramShortLinkHost(url);
-}
-
-// BG Link De-tracker: strip well-known tracking query parameters from URLs.
-[[nodiscard]] QString BgStripTrackers(const QString &url) {
-	static const QStringList kTrackingParams = {
-		u"utm_source"_q, u"utm_medium"_q, u"utm_campaign"_q,
-		u"utm_term"_q, u"utm_content"_q, u"utm_id"_q,
-		u"fbclid"_q, u"gclid"_q, u"msclkid"_q, u"twclid"_q,
-		u"dclid"_q, u"yclid"_q, u"mc_eid"_q, u"mc_cid"_q,
-		u"zanpid"_q, u"igshid"_q, u"si"_q, u"ref"_q,
-	};
-	QUrl parsed(url);
-	if (!parsed.isValid() || parsed.host().isEmpty()) {
-		return url;
-	}
-	QUrlQuery q(parsed.query());
-	bool changed = false;
-	for (const auto &param : kTrackingParams) {
-		if (q.hasQueryItem(param)) {
-			q.removeQueryItem(param);
-			changed = true;
-		}
-	}
-	if (!changed) {
-		return url;
-	}
-	parsed.setQuery(q);
-	return parsed.toString();
 }
 
 [[nodiscard]] bool RequiresConfirmationAfterIvFallback(const QUrl &url) {
@@ -299,10 +269,6 @@ void HiddenUrlClickHandler::Open(QString url, QVariant context) {
 	if (const auto external = UrlClickHandler::ExternalUrlFromInternalUrl(url);
 			!external.isEmpty()) {
 		url = external;
-	}
-	// BG Link De-tracker: remove tracking params before the URL goes anywhere.
-	if (Core::App().settings().bgLinkDeTracker()) {
-		url = BgStripTrackers(url);
 	}
 	url = Core::TryConvertUrlToLocal(url);
 	if (Core::InternalPassportOrOAuthLink(url)) {
@@ -624,7 +590,11 @@ void MonospaceClickHandler::onClick(ClickContext context) const {
 	}
 	const auto my = context.other.value<ClickHandlerContext>();
 	if (const auto controller = my.sessionWindow.get()) {
-		controller->showToast(tr::lng_text_copied(tr::now));
+		controller->showToast({
+			.text = { tr::lng_text_copied(tr::now) },
+			.iconLottie = u"toast/copy"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	}
 	TextUtilities::SetClipboardText(TextForMimeData::Simple(_text.trimmed()));
 }
@@ -667,7 +637,11 @@ void FormattedDateClickHandler::onClick(ClickContext context) const {
 				base::unixtime::parse(date),
 				QLocale::LongFormat);
 			TextUtilities::SetClipboardText(TextForMimeData::Simple(text));
-			show->showToast(tr::lng_date_copied(tr::now));
+			show->showToast({
+				.text = { tr::lng_date_copied(tr::now) },
+				.iconLottie = u"toast/copy"_q,
+				.iconLottieSize = st::toastLottieIconSize,
+			});
 		},
 		&st::menuIconCopy);
 

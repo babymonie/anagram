@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/unixtime.h"
 #include "boxes/peers/edit_peer_color_box.h"
+#include "boxes/premium_preview_box.h"
 #include "lang/lang_keys.h"
 #include "mainwidget.h"
 #include "window/themes/window_theme.h"
@@ -32,7 +33,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_message.h"
 #include "main/main_session.h"
 #include "apiwrap.h"
-#include "data/data_premium_limits.h"
 #include "data/data_session.h"
 #include "data/data_user.h"
 #include "data/data_document.h"
@@ -40,13 +40,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_document_resolver.h"
 #include "data/data_file_origin.h"
 #include "data/data_peer_values.h"
+#include "data/data_premium_limits.h"
+#include "settings/sections/settings_premium.h"
 #include "storage/file_upload.h"
 #include "storage/localimageloader.h"
 #include "window/window_session_controller.h"
 #include "window/themes/window_themes_embedded.h"
+#include "styles/style_background_preview_box.h"
 #include "styles/style_chat.h"
+#include "styles/style_chat_helpers.h"
 #include "styles/style_layers.h"
-#include "styles/style_boxes.h"
 
 #include <QtGui/QClipboard>
 #include <QtGui/QGuiApplication>
@@ -760,14 +763,22 @@ void BackgroundPreviewBox::applyForPeer() {
 	forMe->setClickedCallback([=] {
 		applyForPeer(false);
 	});
-	const auto forBoth = CreateChild<RoundButton>(
+	using namespace rpl::mappers;
+	const auto forBoth = ::Settings::CreateLockedButton(
 		overlay,
 		tr::lng_background_apply_both(
 			lt_user,
 			rpl::single(_forPeer->shortName())),
-		st::backgroundConfirm);
+		st::backgroundConfirm,
+		Data::AmPremiumValue(&_forPeer->session()) | rpl::map(!_1));
 	forBoth->setClickedCallback([=] {
-		applyForPeer(true);
+		if (_forPeer->session().premium()) {
+			applyForPeer(true);
+		} else {
+			ShowPremiumPreviewBox(
+				_controller->uiShow(),
+				PremiumFeature::Wallpapers);
+		}
 	});
 	const auto cancel = CreateChild<RoundButton>(
 		overlay,
@@ -828,7 +839,11 @@ void BackgroundPreviewBox::applyForEveryone() {
 void BackgroundPreviewBox::share() {
 	QGuiApplication::clipboard()->setText(
 		_paper.shareUrl(&_controller->session()));
-	showToast(tr::lng_background_link_copied(tr::now));
+	showToast({
+		.text = { tr::lng_background_link_copied(tr::now) },
+		.iconLottie = u"toast/voip_invite"_q,
+		.iconLottieSize = st::toastLottieIconSize,
+	});
 }
 
 void BackgroundPreviewBox::paintEvent(QPaintEvent *e) {

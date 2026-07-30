@@ -7,7 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "lang/translate_url_provider.h"
 
-#include "base/debug_log.h"
+#include "spellcheck/platform/platform_language.h"
+#include "ui/text/text_html_tags.h"
 
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
@@ -15,7 +16,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtCore/QJsonParseError>
 #include <QtCore/QUrl>
 #include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkProxy>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
 
@@ -27,14 +27,12 @@ namespace {
 }
 
 [[nodiscard]] QString DetectFromLanguage(const QString &text) {
-	// The local recognizer's guess doesn't have to match a language the
-	// user's chosen server actually has loaded (e.g. it may return "bg"
-	// for text a self-hosted LibreTranslate instance never installed),
-	// which the server then rejects outright. Custom providers we support
-	// (LibreTranslate, Lingva) both handle server-side auto-detection
-	// reliably, so let the server decide instead of trusting a client-side
-	// guess it might not be able to satisfy.
+#ifndef TDESKTOP_DISABLE_SPELLCHECK
+	const auto result = Platform::Language::Recognize(text);
+	return result.known() ? result.twoLetterCode() : u"auto"_q;
+#else // TDESKTOP_DISABLE_SPELLCHECK
 	return u"auto"_q;
+#endif // !TDESKTOP_DISABLE_SPELLCHECK
 }
 
 [[nodiscard]] QString JsonValueToText(const QJsonValue &v) {
@@ -128,28 +126,12 @@ void CollectJsonLines(
 	});
 }
 
-[[nodiscard]] std::optional<QString> ParseLibreTranslateResponse(
-		const QJsonDocument &parsed) {
-	if (!parsed.isObject()) {
-		return std::nullopt;
-	}
-	const auto object = parsed.object();
-	const auto i = object.constFind(u"translatedText"_q);
-	if (i == object.constEnd() || !i->isString()) {
-		return std::nullopt;
-	}
-	return i->toString();
-}
-
 [[nodiscard]] std::optional<QString> FormatJsonResponse(
 		const QByteArray &body) {
 	auto error = QJsonParseError();
 	const auto parsed = QJsonDocument::fromJson(body, &error);
 	if (error.error != QJsonParseError::NoError) {
 		return std::nullopt;
-	}
-	if (const auto direct = ParseLibreTranslateResponse(parsed)) {
-		return direct;
 	}
 	if (const auto parsedArray = ParseSegmentedArrayResponse(parsed)) {
 		return parsedArray;
@@ -197,11 +179,6 @@ class UrlTranslateProvider final : public TranslateProvider {
 public:
 	explicit UrlTranslateProvider(QString urlTemplate)
 	: _urlTemplate(std::move(urlTemplate)) {
-		// A custom translate server (often localhost or a LAN address) must
-		// always be reached directly: routing it through whatever MTProto
-		// proxy the user has configured for reaching Telegram's own servers
-		// would make it unreachable and isn't what the user intends.
-		_network.setProxy(QNetworkProxy::NoProxy);
 	}
 
 	[[nodiscard]] bool supportsMessageId() const override {
@@ -218,26 +195,14 @@ public:
 			});
 			return;
 		}
+		auto url = _urlTemplate;
 		const auto from = DetectFromLanguage(request.text.text);
 		const auto toCode = to.twoLetterCode();
-		if (_urlTemplate.contains(u"%q"_q)) {
-			requestGetTemplate(request.text.text, from, toCode, done);
-		} else {
-			requestLibreTranslatePost(request.text.text, from, toCode, done);
-		}
-	}
-
-private:
-	void requestGetTemplate(
-			const QString &text,
-			const QString &from,
-			const QString &toCode,
-			const Fn<void(TranslateProviderResult)> &done) {
-		auto url = _urlTemplate;
 		url.replace(
 			u"%q"_q,
 			QString::fromLatin1(
-				QUrl::toPercentEncoding(text.toHtmlEscaped())));
+				QUrl::toPercentEncoding(
+					TextUtilities::EscapeForHtml(request.text.text))));
 		url.replace(
 			u"%f"_q,
 			QString::fromLatin1(QUrl::toPercentEncoding(from)));
@@ -246,86 +211,29 @@ private:
 			QString::fromLatin1(QUrl::toPercentEncoding(toCode)));
 		const auto requestUrl = QUrl(url);
 		if (!requestUrl.isValid()) {
-			LOG(("Translate Error: Invalid GET template URL '%1'.").arg(url));
 			done(TranslateProviderResult{
 				.error = TranslateProviderError::Unknown,
 			});
 			return;
 		}
-		send(QNetworkRequest(requestUrl), QByteArray(), done);
-	}
-
-	void requestLibreTranslatePost(
-			const QString &text,
-			const QString &from,
-			const QString &toCode,
-			const Fn<void(TranslateProviderResult)> &done) {
-		auto base = _urlTemplate.trimmed();
-		while (base.endsWith('/')) {
-			base.chop(1);
-		}
-		if (!base.endsWith(u"/translate"_q)) {
-			base += u"/translate"_q;
-		}
-		const auto requestUrl = QUrl(base);
-		if (!requestUrl.isValid()) {
-			LOG(("Translate Error: Invalid LibreTranslate URL '%1'.").arg(base));
-			done(TranslateProviderResult{
-				.error = TranslateProviderError::Unknown,
-			});
-			return;
-		}
-		auto body = QJsonObject();
-		body["q"] = text;
-		body["source"] = from;
-		body["target"] = toCode;
-		body["format"] = u"text"_q;
 		auto networkRequest = QNetworkRequest(requestUrl);
-		networkRequest.setHeader(
-			QNetworkRequest::ContentTypeHeader,
-			u"application/json"_q);
-		send(
-			networkRequest,
-			QJsonDocument(body).toJson(QJsonDocument::Compact),
-			done);
-	}
-
-	void send(
-			QNetworkRequest networkRequest,
-			QByteArray postBody,
-			const Fn<void(TranslateProviderResult)> &done) {
-		const auto url = networkRequest.url().toString();
-		const auto reply = postBody.isEmpty()
-			? _network.get(networkRequest)
-			: _network.post(networkRequest, postBody);
+		const auto reply = _network.get(networkRequest);
 		QObject::connect(reply, &QNetworkReply::finished, [=] {
 			auto result = TranslateProviderResult();
 			if (reply->error() != QNetworkReply::NoError) {
-				const auto status = reply->attribute(
-					QNetworkRequest::HttpStatusCodeAttribute).toInt();
-				LOG(("Translate Error: Request to '%1' failed (%2), "
-					"HTTP status %3: %4"
-					).arg(url
-					).arg(int(reply->error())
-					).arg(status
-					).arg(reply->errorString()));
 				result.error = TranslateProviderError::Unknown;
 			} else {
 				const auto body = reply->readAll();
-				const auto formatted = FormatJsonResponse(body);
-				if (!formatted) {
-					DEBUG_LOG(("Translate Warning: Could not parse response "
-						"from '%1': %2").arg(url, QString::fromUtf8(body)));
-				}
-				result.text = TextWithEntities{
-					formatted.value_or(QString::fromUtf8(body)),
-				};
+				const auto formatted = FormatJsonResponse(body).value_or(
+					QString::fromUtf8(body));
+				result.text = TextWithEntities{ formatted };
 			}
 			done(std::move(result));
 			reply->deleteLater();
 		});
 	}
 
+private:
 	const QString _urlTemplate;
 	QNetworkAccessManager _network;
 

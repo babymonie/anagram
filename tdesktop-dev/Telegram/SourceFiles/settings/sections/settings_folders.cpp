@@ -50,6 +50,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 #include "styles/style_settings.h"
+#include "styles/style_stickers_box.h"
 
 namespace Settings {
 namespace {
@@ -1012,18 +1013,25 @@ void BuildTagsSection(SectionBuilder &builder, not_null<FoldersState*> state) {
 			Fn<void()> sendCallback;
 		};
 
+		auto premium = Data::AmPremiumValue(session);
 		const auto tagsButton = content->add(
 			object_ptr<Ui::SettingsButton>(
 				content,
 				tr::lng_filters_enable_tags(),
-				st::settingsButtonNoIcon));
+				st::settingsButtonNoIconLocked));
 		if (ctx.highlights) {
 			ctx.highlights->push_back({ u"folders/show-tags"_q, { tagsButton } });
 		}
 		const auto tagsState = tagsButton->lifetime().make_state<TagsState>();
 		tagsButton->toggleOn(rpl::merge(
-			session->data().chatsFilters().tagsEnabledValue(),
+			rpl::combine(
+				session->data().chatsFilters().tagsEnabledValue(),
+				rpl::duplicate(premium),
+				rpl::mappers::_1 && rpl::mappers::_2),
 			tagsState->tagsTurnOff.events()));
+		rpl::duplicate(premium) | rpl::on_next([=](bool value) {
+			tagsButton->setToggleLocked(!value);
+		}, tagsButton->lifetime());
 
 		const auto send = [=,
 				weak = base::make_weak(tagsButton)](bool checked) {
@@ -1036,9 +1044,18 @@ void BuildTagsSection(SectionBuilder &builder, not_null<FoldersState*> state) {
 
 		tagsButton->toggledValue(
 		) | rpl::filter([=](bool checked) {
-			state->tagsButtonEnabled.fire_copy(checked);
-			const auto proceed = (checked
-				!= session->data().chatsFilters().tagsEnabled());
+			const auto premium = session->premium();
+			if (checked && !premium) {
+				ShowPremiumPreviewToBuy(controller, PremiumFeature::FilterTags);
+				tagsState->tagsTurnOff.fire(false);
+			}
+			if (!premium) {
+				state->tagsButtonEnabled.fire(false);
+			} else {
+				state->tagsButtonEnabled.fire_copy(checked);
+			}
+			const auto proceed = premium
+				&& (checked != session->data().chatsFilters().tagsEnabled());
 			if (!proceed) {
 				tagsState->requestTimer.cancel();
 			}
@@ -1102,7 +1119,6 @@ void BuildViewSection(SectionBuilder &builder) {
 		wrap->toggleOn(controller->enoughSpaceForFiltersValue());
 		const auto content = wrap->entity();
 
-		Ui::AddDivider(content);
 		Ui::AddSkip(content);
 		const auto title = Ui::AddSubsectionTitle(
 			content,
@@ -1131,6 +1147,34 @@ void BuildViewSection(SectionBuilder &builder) {
 
 		group->setChangedCallback([=](bool value) {
 			Core::App().settings().setChatFiltersHorizontal(value);
+			Core::App().saveSettingsDelayed();
+		});
+
+		Ui::AddSkip(content);
+		Ui::AddSubsectionTitle(
+			content,
+			tr::lng_filters_tabs_subtitle());
+
+		using Mode = Ui::ChatsFiltersTabsMode;
+		const auto modeGroup = std::make_shared<Ui::RadioenumGroup<Mode>>(
+			Core::App().settings().chatFiltersTabsMode());
+		const auto addMode = [&](Mode value, const QString &text) {
+			content->add(
+				object_ptr<Ui::Radioenum<Mode>>(
+					content,
+					modeGroup,
+					value,
+					text,
+					st::settingsSendType),
+				st::settingsSendTypePadding);
+		};
+		addMode(Mode::Default, tr::lng_filters_tabs_default(tr::now));
+		addMode(Mode::TextOnly, tr::lng_filters_tabs_text(tr::now));
+		addMode(Mode::TextAndIcons, tr::lng_filters_tabs_text_icons(tr::now));
+		addMode(Mode::IconsOnly, tr::lng_filters_tabs_icons(tr::now));
+
+		modeGroup->setChangedCallback([=](Mode value) {
+			Core::App().settings().setChatFiltersTabsMode(value);
 			Core::App().saveSettingsDelayed();
 		});
 		Ui::AddSkip(content);

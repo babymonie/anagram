@@ -382,10 +382,6 @@ callBarHangup: IconButton(callBarMuteToggle) {
 	icon: icon {{ "calls/call_discard", callBarFg }};
 	iconPosition: point(3px, 1px);
 }
-callBarMini: IconButton(callBarMuteToggle) {
-	icon: icon {{ "calls/mini_calls_arrow", callBarFg }};
-	iconPosition: point(3px, 1px);
-}
 callBarLabel: LabelSimple(defaultLabelSimple) {
 	font: semiboldFont;
 	textFg: callBarFg;

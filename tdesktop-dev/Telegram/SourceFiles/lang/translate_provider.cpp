@@ -24,9 +24,7 @@ base::options::option<QString> OptionTranslateUrlTemplate({
 	.id = "translate-url-template",
 	.name = "Translate URL template",
 	.description = "Template URL for custom translation provider."
-		" Supports %q text, %f source language and %t target language."
-		" If the URL has no %q, it is treated as a LibreTranslate-style"
-		" server base URL and POSTed to as JSON (e.g. http://localhost:5000).",
+		" Supports %q text, %f source language and %t target language.",
 });
 
 } // namespace
@@ -35,13 +33,10 @@ namespace Ui {
 
 std::unique_ptr<TranslateProvider> CreateTranslateProvider(
 		not_null<Main::Session*> session) {
-	const auto settingsUrl = Core::App().settings().translateUrlTemplate();
-	if (!settingsUrl.isEmpty()) {
-		return CreateUrlTranslateProvider(settingsUrl);
-	}
-	const auto optionUrl = OptionTranslateUrlTemplate.value();
-	if (!optionUrl.isEmpty()) {
-		return CreateUrlTranslateProvider(optionUrl);
+	const auto urlTemplate = OptionTranslateUrlTemplate.value();
+	if (!urlTemplate.isEmpty()
+		&& urlTemplate.contains(u"%q"_q)) {
+		return CreateUrlTranslateProvider(urlTemplate);
 	}
 	if (Core::App().settings().usePlatformTranslation()
 		&& Platform::IsTranslateProviderAvailable()) {

@@ -14,8 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/unixtime.h"
 #include "data/data_peer_values.h"
 #include "apiwrap.h"
-#include "core/application.h"
-#include "core/core_settings.h"
 
 namespace Api {
 namespace {
@@ -154,12 +152,6 @@ void SendProgressManager::send(const Key &key, int progress) {
 }
 
 bool SendProgressManager::skipRequest(const Key &key) const {
-	// BG Typing Suppressor: silently skip typing notifications for suppressed peers.
-	if (key.type == SendProgressType::Typing
-			&& Core::App().settings().isBgTypingSuppressed(
-				key.history->peer->id.value)) {
-		return true;
-	}
 	const auto user = key.history->peer->asUser();
 	if (!user) {
 		return false;

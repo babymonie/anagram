@@ -46,6 +46,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_delegate_impl.h"
 #include "iv/iv_instance.h"
 #include "iv/iv_data.h"
+#include "iv/editor/iv_editor_session.h"
+#include "iv/editor/iv_editor_window.h"
 #include "lang/lang_translator.h"
 #include "lang/lang_cloud_manager.h"
 #include "lang/lang_hardcoded.h"
@@ -94,13 +96,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/accessible/ui_accessible_factory.h"
 #include "ui/boxes/confirm_box.h"
 #include "core/cached_webview_availability.h"
-#include "styles/style_window.h"
 
 #include <QtCore/QStandardPaths>
 #include <QtCore/QMimeDatabase>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
-#include <QtGui/QWindow>
 
 #include <ksandbox.h>
 
@@ -217,6 +217,7 @@ void Application::closeAdditionalWindows() {
 		}
 	}
 	_iv->closeAll();
+	Iv::Editor::CloseAllWindows();
 }
 
 Application::~Application() {
@@ -556,6 +557,7 @@ void Application::startMediaView() {
 	// only after first show and then hide.
 	InvokeQueued(this, [=] {
 		_mediaView = std::make_unique<Media::View::OverlayWidget>();
+		_mediaView->setSystemMediaControls(_mediaControlsManager.get());
 	});
 #elif defined Q_OS_WIN // Q_OS_MAC || Q_OS_WIN
 	// On Windows we needed such hack for the main window, otherwise
@@ -563,9 +565,11 @@ void Application::startMediaView() {
 	// was broken / lost to some invalid values.
 	const auto current = _lastActivePrimaryWindow->widget()->geometry();
 	_mediaView = std::make_unique<Media::View::OverlayWidget>();
+	_mediaView->setSystemMediaControls(_mediaControlsManager.get());
 	_lastActivePrimaryWindow->widget()->Ui::RpWidget::setGeometry(current);
 #else
 	_mediaView = std::make_unique<Media::View::OverlayWidget>();
+	_mediaView->setSystemMediaControls(_mediaControlsManager.get());
 #endif // Q_OS_MAC || Q_OS_WIN
 }
 
@@ -741,10 +745,9 @@ bool Application::eventFilter(QObject *object, QEvent *e) {
 	} break;
 
 	case QEvent::ThemeChange: {
-		if (Platform::IsLinux()
-				&& object == QGuiApplication::allWindows().constFirst()) {
-			Core::App().refreshApplicationIcon();
-			Core::App().tray().updateIconCounters();
+		if (Platform::IsLinux() && object == qApp) {
+			refreshApplicationIcon();
+			tray().updateIconCounters();
 		}
 	} break;
 	}
@@ -1409,6 +1412,13 @@ Window::Controller *Application::activePrimaryWindow() const {
 	return _lastActivePrimaryWindow;
 }
 
+void Application::setActivePrimaryWindow(
+		not_null<Window::Controller*> window) {
+	if (window->isPrimary()) {
+		_lastActivePrimaryWindow = window;
+	}
+}
+
 Window::Controller *Application::separateWindowFor(
 		Window::SeparateId id) const {
 	for (const auto &[existingId, window] : _windows) {
@@ -1690,7 +1700,9 @@ bool Application::closeActiveWindow() {
 	if (_mediaView && _mediaView->isActive()) {
 		_mediaView->close();
 		return true;
-	} else if (_iv->closeActive() || calls().closeCurrentActiveCall()) {
+	} else if (_iv->closeActive()
+		|| Iv::Editor::CloseActiveWindow()
+		|| calls().closeCurrentActiveCall()) {
 		return true;
 	} else if (const auto window = activeWindow()) {
 		if (window->widget()->isActive()) {

@@ -187,9 +187,6 @@ public:
 		writePrefImpl<Type>(key, std::forward<Other>(value));
 	}
 	void clearPref(std::string_view key);
-	void writePrefBytes(std::string_view key, const QByteArray &value);
-	[[nodiscard]] std::optional<QByteArray> readPrefBytes(
-		std::string_view key);
 
 	template <typename Type, typename Other = Type>
 	[[nodiscard]] Type readPref(

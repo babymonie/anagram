@@ -22,8 +22,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history.h"
 #include "history/view/history_view_element.h"
 #include "lang/lang_keys.h"
-#include "core/application.h"
-#include "core/core_settings.h"
 #include "main/main_session.h"
 #include "ui/chat/sponsored_message_bar.h"
 #include "ui/text/text_utilities.h" // tr::rich.
@@ -264,9 +262,6 @@ bool SponsoredMessages::isTopBarFor(not_null<History*> history) const {
 }
 
 void SponsoredMessages::request(not_null<History*> history, Fn<void()> done) {
-	if (Core::App().settings().hideSponsoredMessages()) {
-		return;
-	}
 	if (!canHaveFor(history)) {
 		return;
 	}
@@ -307,10 +302,6 @@ void SponsoredMessages::requestForVideo(
 		Fn<void(SponsoredForVideo)> done) {
 	Expects(done != nullptr);
 
-	if (Core::App().settings().hideSponsoredMessages()) {
-		done({});
-		return;
-	}
 	if (!canHaveFor(item)) {
 		done({});
 		return;
@@ -836,6 +827,25 @@ SponsoredMessages::State SponsoredMessages::state(
 		not_null<History*> history) const {
 	const auto it = _data.find(history);
 	return (it == end(_data)) ? State::None : it->second.state;
+}
+
+bool SponsoredMessages::hasUnshownFor(not_null<History*> history) const {
+	if (isTopBarFor(history)) {
+		return false;
+	}
+	const auto it = _data.find(history);
+	if (it == end(_data)) {
+		return false;
+	}
+	const auto &list = it->second;
+	if (list.showedAll
+		|| !TooEarlyForRequest(list.received)
+		|| list.postsBetween) {
+		return false;
+	}
+	return ranges::any_of(list.entries, [](const Entry &entry) {
+		return (entry.item == nullptr);
+	});
 }
 
 } // namespace Data

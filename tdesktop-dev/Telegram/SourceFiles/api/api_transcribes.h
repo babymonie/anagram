@@ -11,7 +11,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "spellcheck/spellcheck_types.h"
 
 class ApiWrap;
-class QNetworkAccessManager;
 
 namespace Main {
 class Session;
@@ -72,14 +71,10 @@ private:
 	std::optional<bool> _trialsSupport;
 	TimeId _trialsRefreshAt = -1;
 
-	void loadWithWhisper(not_null<HistoryItem*> item);
-
 	base::flat_map<FullMsgId, Entry> _map;
 	base::flat_map<uint64, FullMsgId> _ids;
 
 	base::flat_map<FullMsgId, SummaryEntry> _summaries;
-
-	std::unique_ptr<QNetworkAccessManager> _whisperNetwork;
 
 };
 

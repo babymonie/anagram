@@ -164,16 +164,6 @@ struct ViewRemoval {
 	ViewRemovalReason reason = ViewRemovalReason::Removed;
 };
 
-// Content captured at the moment a message is ghost-kept, so it survives
-// independently of Telegram's own history/cache lifetime (clearing chat
-// history, cache eviction, etc. must not lose it - only the user removing
-// it from the Ghost Messages vault should).
-struct BgGhostContent {
-	QString senderName;
-	QString text;
-	TimeId date = 0;
-};
-
 class Session final {
 public:
 	using ViewElement = HistoryView::Element;
@@ -912,6 +902,9 @@ public:
 	void channelDifferenceTooLong(not_null<ChannelData*> channel);
 	[[nodiscard]] rpl::producer<not_null<ChannelData*>> channelDifferenceTooLong() const;
 
+	[[nodiscard]] auto communityAdminPromotions() const
+	-> rpl::producer<not_null<ChannelData*>>;
+
 	void registerItemView(not_null<ViewElement*> view);
 	void unregisterItemView(not_null<ViewElement*> view);
 
@@ -941,6 +934,7 @@ public:
 	};
 	void refreshChatListEntry(Dialogs::Key key);
 	void removeChatListEntry(Dialogs::Key key);
+	void refreshChatListUnreadOnTop();
 	[[nodiscard]] auto chatListEntryRefreshes() const
 		-> rpl::producer<ChatListEntryRefresh>;
 
@@ -1019,13 +1013,6 @@ public:
 		const MTPDupdateShortSentMessage &data);
 	[[nodiscard]] HistoryItem *messageWithPeer(PeerId id) const;
 
-	// Ghost Messages vault: content survives independently of Telegram's
-	// own history/cache lifetime. Only removeBgGhostVaultEntry (the user
-	// explicitly deleting it) makes an entry disappear for good.
-	[[nodiscard]] auto bgGhostVault() const
-		-> const base::flat_map<FullMsgId, BgGhostContent> &;
-	void removeBgGhostVaultEntry(FullMsgId id);
-
 private:
 	using Messages = std::unordered_map<MsgId, not_null<HistoryItem*>>;
 
@@ -1051,12 +1038,6 @@ private:
 
 	void scheduleNextFormattedDateUpdate();
 	void checkFormattedDateUpdates();
-	void applyBgGhostDeleted(not_null<HistoryItem*> item);
-	void saveBgGhostDeleted();
-	[[nodiscard]] bool shouldKeepAsBgGhost(
-		not_null<const HistoryItem*> item) const;
-	[[nodiscard]] BgGhostContent CaptureBgGhostContent(
-		not_null<const HistoryItem*> item) const;
 
 	int computeUnreadBadge(const Dialogs::UnreadState &state) const;
 	bool computeUnreadBadgeMuted(const Dialogs::UnreadState &state) const;
@@ -1065,6 +1046,9 @@ private:
 	void applyDialog(
 		Folder *requestFolder,
 		const MTPDdialogFolder &data);
+	void applyDialog(
+		Folder *requestFolder,
+		const MTPDdialogCommunity &data);
 
 	const Messages *messagesList(PeerId peerId) const;
 	not_null<Messages*> messagesListForInsert(PeerId peerId);
@@ -1258,7 +1242,6 @@ private:
 	base::Timer _formattedDateTimer;
 
 	std::unordered_map<MsgId, not_null<HistoryItem*>> _nonChannelMessages;
-	base::flat_map<FullMsgId, BgGhostContent> _bgGhostDeleted;
 
 	base::flat_map<uint64, FullMsgId> _messageByRandomId;
 	base::flat_map<uint64, SentData> _sentMessagesData;
@@ -1332,6 +1315,7 @@ private:
 	rpl::event_stream<not_null<WebPageData*>> _webpageUpdates;
 	rpl::event_stream<not_null<PollData*>> _pollUpdates;
 	rpl::event_stream<not_null<ChannelData*>> _channelDifferenceTooLong;
+	rpl::event_stream<not_null<ChannelData*>> _communityAdminPromotions;
 	rpl::event_stream<not_null<PhotoData*>> _photoLoadProgress;
 	rpl::event_stream<not_null<DocumentData*>> _documentLoadProgress;
 	base::flat_set<not_null<ChannelData*>> _suggestToGigagroup;

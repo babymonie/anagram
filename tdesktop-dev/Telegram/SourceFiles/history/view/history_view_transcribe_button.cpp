@@ -9,9 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/unixtime.h"
 #include "boxes/premium_preview_box.h"
-#include "core/application.h"
 #include "core/click_handler_types.h" // ClickHandlerContext
-#include "core/core_settings.h"
 #include "history/history.h"
 #include "history/history_item.h"
 #include "data/data_document.h"
@@ -334,9 +332,6 @@ void TranscribeButton::paint(
 bool TranscribeButton::hasLock() const {
 	const auto session = &_item->history()->session();
 	if (session->premium()) {
-		return false;
-	}
-	if (!Core::App().settings().whisperApiUrl().isEmpty()) {
 		return false;
 	}
 	const auto transcribes = &session->api().transcribes();

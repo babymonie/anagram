@@ -53,7 +53,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_chat_helpers.h"
 #include "styles/style_settings.h"
 #include "styles/style_info.h"
-#include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 
 #include <QtGui/QGuiApplication>
@@ -532,8 +531,11 @@ void PhoneNumberPrivacyController::prepareWarningLabel(
 	warning->overrideLinkClickHandler([=] {
 		QGuiApplication::clipboard()->setText(PublicLinkByPhone(
 			_controller->session().user()));
-		_controller->window().showToast(
-			tr::lng_username_copied(tr::now));
+		_controller->window().showToast({
+			.text = { tr::lng_username_copied(tr::now) },
+			.iconLottie = u"toast/voip_invite"_q,
+			.iconLottieSize = st::toastLottieIconSize,
+		});
 	});
 }
 
@@ -710,6 +712,20 @@ object_ptr<Ui::RpWidget> LastSeenPrivacyController::setupBelowWidget(
 	Ui::AddDividerText(
 		content,
 		tr::lng_edit_lastseen_hide_read_time_about());
+	if (!controller->session().premium()) {
+		Ui::AddSkip(content);
+		content->add(object_ptr<Ui::SettingsButton>(
+			content,
+			tr::lng_edit_lastseen_subscribe(),
+			st::settingsButtonLightNoIcon
+		))->setClickedCallback([=] {
+			Settings::ShowPremium(controller, u"lastseen"_q);
+		});
+		Ui::AddSkip(content);
+		Ui::AddDividerText(
+			content,
+			tr::lng_edit_lastseen_subscribe_about());
+	}
 
 	result->toggleOn(rpl::combine(
 		_option.value(),

@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/core_settings_proxy.h"
 #include "media/media_common.h"
 #include "dialogs/ui/dialogs_quick_action.h"
+#include "ui/widgets/chat_filters_tabs_mode.h"
 #include "window/themes/window_themes_embedded.h"
 #include "ui/chat/attach/attach_send_files_way.h"
 #include "base/flags.h"
@@ -519,6 +520,12 @@ public:
 	}
 	[[nodiscard]] rpl::producer<bool> cornerReplyValue() const {
 		return _cornerReply.value();
+	}
+	void setPullToNextChannel(bool value) {
+		_pullToNextChannel = value;
+	}
+	[[nodiscard]] bool pullToNextChannel() const {
+		return _pullToNextChannel.current();
 	}
 
 	void setSpellcheckerEnabled(bool value) {
@@ -1071,6 +1078,11 @@ public:
 	[[nodiscard]] rpl::producer<bool> chatFiltersHorizontalChanges() const;
 	void setChatFiltersHorizontal(bool value);
 
+	[[nodiscard]] Ui::ChatsFiltersTabsMode chatFiltersTabsMode() const;
+	[[nodiscard]] auto chatFiltersTabsModeValue() const
+	-> rpl::producer<Ui::ChatsFiltersTabsMode>;
+	void setChatFiltersTabsMode(Ui::ChatsFiltersTabsMode value);
+
 	[[nodiscard]] Media::VideoQuality videoQuality() const;
 	void setVideoQuality(Media::VideoQuality quality);
 
@@ -1097,6 +1109,13 @@ public:
 	}
 	void setNotificationsVolume(ushort value) {
 		_notificationsVolume = value;
+	}
+
+	[[nodiscard]] int mediaGridZoomStep() const {
+		return _mediaGridZoomStep;
+	}
+	void setMediaGridZoomStep(int value) {
+		_mediaGridZoomStep = value;
 	}
 
 	template <typename Type, typename Other>
@@ -1190,6 +1209,7 @@ private:
 	bool _suggestAnimatedEmoji = true;
 	rpl::variable<bool> _cornerReply = true;
 	rpl::variable<bool> _cornerReaction = true;
+	rpl::variable<bool> _pullToNextChannel = true;
 	rpl::variable<bool> _spellcheckerEnabled = true;
 	PlaybackSpeed _videoPlaybackSpeed;
 	rpl::variable<PlaybackSpeed> _voicePlaybackSpeed;
@@ -1259,6 +1279,8 @@ private:
 	rpl::variable<int> _ivZoom = 0;
 	Media::VideoQuality _videoQuality;
 	rpl::variable<bool> _chatFiltersHorizontal = false;
+	rpl::variable<Ui::ChatsFiltersTabsMode> _chatFiltersTabsMode
+		= Ui::ChatsFiltersTabsMode::Default;
 	base::flat_map<QByteArray, QByteArray> _prefs;
 
 	bool _tabbedReplacedWithInfo = false; // per-window
@@ -1276,6 +1298,8 @@ private:
 		= Dialogs::Ui::QuickDialogAction::Disabled;
 
 	ushort _notificationsVolume = 100;
+
+	int _mediaGridZoomStep = 0;
 
 	QByteArray _photoEditorBrush;
 

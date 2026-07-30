@@ -15,10 +15,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/effects/gradient.h"
 #include "ui/rp_widget.h"
 
-namespace BetterGram {
-class BgCallMini;
-} // namespace BetterGram
-
 namespace Ui {
 class IconButton;
 class AbstractButton;
@@ -100,8 +96,6 @@ private:
 	object_ptr<Mute> _mute;
 	object_ptr<Ui::AbstractButton> _info;
 	object_ptr<Ui::IconButton> _hangup;
-	object_ptr<Ui::IconButton> _bgMiniButton;
-	std::unique_ptr<BetterGram::BgCallMini> _bgMiniPlayer;
 	base::unique_qptr<Ui::RpWidget> _blobs;
 
 	rpl::variable<bool> _isGroupConnecting = false;

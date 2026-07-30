@@ -35,8 +35,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/boxes/confirm_box.h"
 #include "ui/painter.h"
 #include "ui/vertical_list.h"
-#include "core/application.h"
-#include "core/core_settings.h"
 #include "settings/sections/settings_business.h"
 #include "settings/sections/settings_premium.h"
 #include "lottie/lottie_single_player.h"
@@ -150,6 +148,8 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 		return tr::lng_premium_summary_subtitle_no_forwards();
 	case PremiumFeature::AiCompose:
 		return tr::lng_premium_summary_subtitle_ai_compose();
+	case PremiumFeature::RichFormatting:
+		return tr::lng_premium_summary_subtitle_rich_formatting();
 
 	case PremiumFeature::BusinessLocation:
 		return tr::lng_business_subtitle_location();
@@ -225,6 +225,8 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 		return tr::lng_premium_summary_about_no_forwards();
 	case PremiumFeature::AiCompose:
 		return tr::lng_premium_summary_about_ai_compose();
+	case PremiumFeature::RichFormatting:
+		return tr::lng_premium_summary_about_rich_formatting();
 
 	case PremiumFeature::BusinessLocation:
 		return tr::lng_business_about_location();
@@ -570,6 +572,7 @@ struct VideoPreviewDocument {
 		case PremiumFeature::Gifts: return "gifts";
 		case PremiumFeature::NoForwards: return "no_forwards";
 		case PremiumFeature::AiCompose: return "ai_compose";
+		case PremiumFeature::RichFormatting: return "rich_formatting";
 
 		case PremiumFeature::BusinessLocation: return "business_location";
 		case PremiumFeature::BusinessHours: return "business_hours";
@@ -1442,9 +1445,6 @@ void ShowPremiumPreviewBox(
 		not_null<Window::SessionController*> controller,
 		PremiumFeature section,
 		Fn<void(not_null<Ui::BoxContent*>)> shown) {
-	if (Core::App().settings().hidePremiumUpsells()) {
-		return;
-	}
 	ShowPremiumPreviewBox(controller->uiShow(), section, std::move(shown));
 }
 
@@ -1453,9 +1453,6 @@ void ShowPremiumPreviewBox(
 		PremiumFeature section,
 		Fn<void(not_null<Ui::BoxContent*>)> shown,
 		bool hideSubscriptionButton) {
-	if (Core::App().settings().hidePremiumUpsells()) {
-		return;
-	}
 	Show(std::move(show), Descriptor{
 		.section = section,
 		.shownCallback = std::move(shown),
@@ -1467,13 +1464,17 @@ void ShowPremiumPreviewToBuy(
 		not_null<Window::SessionController*> controller,
 		PremiumFeature section,
 		Fn<void()> hiddenCallback) {
-	if (Core::App().settings().hidePremiumUpsells()) {
-		if (hiddenCallback) {
-			hiddenCallback();
-		}
-		return;
-	}
-	Show(controller->uiShow(), Descriptor{
+	ShowPremiumPreviewToBuy(
+		controller->uiShow(),
+		section,
+		std::move(hiddenCallback));
+}
+
+void ShowPremiumPreviewToBuy(
+		std::shared_ptr<ChatHelpers::Show> show,
+		PremiumFeature section,
+		Fn<void()> hiddenCallback) {
+	Show(std::move(show), Descriptor{
 		.section = section,
 		.fromSettings = true,
 		.hiddenCallback = std::move(hiddenCallback),
