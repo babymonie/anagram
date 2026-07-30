@@ -1,0 +1,102 @@
+[submodule "tdesktop-dev/Telegram/ThirdParty/GSL"]
+	path = tdesktop-dev/Telegram/ThirdParty/GSL
+	url = https://github.com/Microsoft/GSL.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/xxHash"]
+	path = tdesktop-dev/Telegram/ThirdParty/xxHash
+	url = https://github.com/Cyan4973/xxHash.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/rlottie"]
+	path = tdesktop-dev/Telegram/ThirdParty/rlottie
+	url = https://github.com/desktop-app/rlottie.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/lz4"]
+	path = tdesktop-dev/Telegram/ThirdParty/lz4
+	url = https://github.com/lz4/lz4.git
+[submodule "tdesktop-dev/Telegram/lib_crl"]
+	path = tdesktop-dev/Telegram/lib_crl
+	url = https://github.com/desktop-app/lib_crl.git
+[submodule "tdesktop-dev/Telegram/lib_rpl"]
+	path = tdesktop-dev/Telegram/lib_rpl
+	url = https://github.com/desktop-app/lib_rpl.git
+[submodule "tdesktop-dev/Telegram/lib_base"]
+	path = tdesktop-dev/Telegram/lib_base
+	url = https://github.com/desktop-app/lib_base.git
+[submodule "tdesktop-dev/Telegram/codegen"]
+	path = tdesktop-dev/Telegram/codegen
+	url = https://github.com/desktop-app/codegen.git
+[submodule "tdesktop-dev/Telegram/lib_ui"]
+	path = tdesktop-dev/Telegram/lib_ui
+	url = https://github.com/desktop-app/lib_ui.git
+[submodule "tdesktop-dev/Telegram/lib_lottie"]
+	path = tdesktop-dev/Telegram/lib_lottie
+	url = https://github.com/desktop-app/lib_lottie.git
+[submodule "tdesktop-dev/Telegram/lib_tl"]
+	path = tdesktop-dev/Telegram/lib_tl
+	url = https://github.com/desktop-app/lib_tl.git
+[submodule "tdesktop-dev/Telegram/lib_spellcheck"]
+	path = tdesktop-dev/Telegram/lib_spellcheck
+	url = https://github.com/desktop-app/lib_spellcheck
+[submodule "tdesktop-dev/Telegram/lib_storage"]
+	path = tdesktop-dev/Telegram/lib_storage
+	url = https://github.com/desktop-app/lib_storage.git
+[submodule "tdesktop-dev/cmake"]
+	path = tdesktop-dev/cmake
+	url = https://github.com/desktop-app/cmake_helpers.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/expected"]
+	path = tdesktop-dev/Telegram/ThirdParty/expected
+	url = https://github.com/TartanLlama/expected
+[submodule "tdesktop-dev/Telegram/ThirdParty/QR"]
+	path = tdesktop-dev/Telegram/ThirdParty/QR
+	url = https://github.com/nayuki/QR-Code-generator
+[submodule "tdesktop-dev/Telegram/lib_qr"]
+	path = tdesktop-dev/Telegram/lib_qr
+	url = https://github.com/desktop-app/lib_qr.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/hunspell"]
+	path = tdesktop-dev/Telegram/ThirdParty/hunspell
+	url = https://github.com/hunspell/hunspell
+[submodule "tdesktop-dev/Telegram/ThirdParty/range-v3"]
+	path = tdesktop-dev/Telegram/ThirdParty/range-v3
+	url = https://github.com/ericniebler/range-v3.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/nimf"]
+	path = tdesktop-dev/Telegram/ThirdParty/nimf
+	url = https://github.com/hamonikr/nimf.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/hime"]
+	path = tdesktop-dev/Telegram/ThirdParty/hime
+	url = https://github.com/hime-ime/hime.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/fcitx5-qt"]
+	path = tdesktop-dev/Telegram/ThirdParty/fcitx5-qt
+	url = https://github.com/fcitx/fcitx5-qt.git
+[submodule "tdesktop-dev/Telegram/lib_webrtc"]
+	path = tdesktop-dev/Telegram/lib_webrtc
+	url = https://github.com/desktop-app/lib_webrtc.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/tgcalls"]
+	path = tdesktop-dev/Telegram/ThirdParty/tgcalls
+	url = https://github.com/TelegramMessenger/tgcalls.git
+[submodule "tdesktop-dev/Telegram/lib_webview"]
+	path = tdesktop-dev/Telegram/lib_webview
+	url = https://github.com/desktop-app/lib_webview.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/kimageformats"]
+	path = tdesktop-dev/Telegram/ThirdParty/kimageformats
+	url = https://github.com/KDE/kimageformats.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/kcoreaddons"]
+	path = tdesktop-dev/Telegram/ThirdParty/kcoreaddons
+	url = https://github.com/KDE/kcoreaddons.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/cld3"]
+	path = tdesktop-dev/Telegram/ThirdParty/cld3
+	url = https://github.com/google/cld3.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/libprisma"]
+	path = tdesktop-dev/Telegram/ThirdParty/libprisma
+	url = https://github.com/desktop-app/libprisma.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/xdg-desktop-portal"]
+	path = tdesktop-dev/Telegram/ThirdParty/xdg-desktop-portal
+	url = https://github.com/flatpak/xdg-desktop-portal.git
+[submodule "tdesktop-dev/Telegram/lib_translate"]
+	path = tdesktop-dev/Telegram/lib_translate
+	url = https://github.com/desktop-app/lib_translate
+[submodule "tdesktop-dev/Telegram/ThirdParty/cmark-gfm"]
+	path = tdesktop-dev/Telegram/ThirdParty/cmark-gfm
+	url = https://github.com/github/cmark-gfm.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/MicroTeX"]
+	path = tdesktop-dev/Telegram/ThirdParty/MicroTeX
+	url = https://github.com/desktop-app/MicroTeX.git
+[submodule "tdesktop-dev/Telegram/ThirdParty/TooManyCooks"]
+	path = tdesktop-dev/Telegram/ThirdParty/TooManyCooks
+	url = https://github.com/tzcnt/TooManyCooks.git
