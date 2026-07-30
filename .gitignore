@@ -1,0 +1,42 @@
+# Build artifacts & local dev tools (CI rebuilds these from scripts)
+Libraries/
+ThirdParty/
+tdesktop-dev/out/
+bettergram-hub/bettergram-hub
+bettergram-hub/bettergram-hub.exe
+
+# Frontend
+bettergram-site/node_modules/
+bettergram-site/dist/
+bettergram-site/.vite/
+
+# IDE
+.vs/
+.vscode/settings.json
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp build dirs
+tdesktop-dev/cmake/build/
+
+# Depwire cache
+.depwire/cache.db

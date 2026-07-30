@@ -1,0 +1,242 @@
+{
+  "site": {
+    "name": "BetterGram",
+    "tagline": "A practical setup guide for BetterGram.",
+    "description": "Install BetterGram, sign in with your Telegram number, enable the features you want, and connect an optional hub for shared community extras.",
+    "github": "https://github.com/bettergram/tdesktop",
+    "baseClient": "Telegram Desktop",
+    "license": "GPLv3"
+  },
+
+  "stats": [
+    { "value": "1", "label": "Normal Telegram login" },
+    { "value": "4", "label": "Setup steps" },
+    { "value": "Optional", "label": "Hubs" },
+    { "value": "Local", "label": "Power features" }
+  ],
+
+  "categories": [
+    { "id": "all", "label": "All Features", "icon": "LayoutGrid" },
+    { "id": "setup", "label": "Setup", "icon": "Check", "color": "#2AABEE" },
+    { "id": "power", "label": "Power Features", "icon": "Zap", "color": "#F5A623" },
+    { "id": "privacy", "label": "Privacy", "icon": "ShieldCheck", "color": "#27AE60" },
+    { "id": "hub", "label": "Hub", "icon": "Globe", "color": "#9B59B6" },
+    { "id": "media", "label": "Media", "icon": "Play", "color": "#E74C3C" }
+  ],
+
+  "features": [
+    {
+      "id": "phone-login",
+      "category": "setup",
+      "title": "Phone Number Login",
+      "description": "Start BetterGram, enter your Telegram phone number, confirm the login code, then enter your cloud password if your account uses 2FA.",
+      "icon": "UserCheck",
+      "badge": "Start here",
+      "badgeVariant": "blue"
+    },
+    {
+      "id": "settings-panel",
+      "category": "setup",
+      "title": "BetterGram Settings",
+      "description": "After login, open Settings > BetterGram. Enable only the tools you want: ghost messages, privacy cleanup, themes, AI services, hubs, and media helpers.",
+      "icon": "Palette",
+      "badge": "Main control",
+      "badgeVariant": "blue"
+    },
+    {
+      "id": "ghost-messages",
+      "category": "power",
+      "title": "Ghost Messages",
+      "description": "When someone deletes an incoming message, BetterGram keeps the original content locally and shows it greyed out without covering it with a deleted badge.",
+      "icon": "Ghost",
+      "badge": "Greyed out",
+      "badgeVariant": "amber"
+    },
+    {
+      "id": "always-timestamps",
+      "category": "power",
+      "title": "Always-Show Timestamps",
+      "description": "Force HH:MM to appear on every message bubble type, including media layouts that normally hide timestamps.",
+      "icon": "Clock",
+      "badge": null,
+      "badgeVariant": null
+    },
+    {
+      "id": "char-counter",
+      "category": "power",
+      "title": "Character Counter",
+      "description": "Show a live character count in the compose box so long messages are easier to manage.",
+      "icon": "Type",
+      "badge": null,
+      "badgeVariant": null
+    },
+    {
+      "id": "link-detracker",
+      "category": "privacy",
+      "title": "Link De-tracker",
+      "description": "Strip common tracking parameters such as UTM, fbclid, gclid, and msclkid before links open in your browser.",
+      "icon": "LinkOff",
+      "badge": "Privacy",
+      "badgeVariant": "green"
+    },
+    {
+      "id": "hide-sponsored",
+      "category": "privacy",
+      "title": "Hide Sponsored Messages",
+      "description": "Remove sponsored message surfaces from the client so your chat list and channel reading stay cleaner.",
+      "icon": "EyeOff",
+      "badge": null,
+      "badgeVariant": null
+    },
+    {
+      "id": "typing-suppressor",
+      "category": "privacy",
+      "title": "Typing Indicator Suppressor",
+      "description": "Add peer IDs to a local suppress list so BetterGram skips sending typing notifications for those chats.",
+      "icon": "MessageCircleOff",
+      "badge": "Local",
+      "badgeVariant": "green"
+    },
+    {
+      "id": "hub-profile",
+      "category": "hub",
+      "title": "Hub Profiles",
+      "description": "Connect a hub URL to show BetterGram profile colors, animated avatar URLs, and role badges to other hub users.",
+      "icon": "UserCircle",
+      "badge": "Hub optional",
+      "badgeVariant": "purple"
+    },
+    {
+      "id": "hub-reactions",
+      "category": "hub",
+      "title": "Hub Reactions",
+      "description": "Use hub-hosted reactions and shared visual extras between BetterGram clients. Normal Telegram users see standard Telegram messages.",
+      "icon": "Smile",
+      "badge": "Hub optional",
+      "badgeVariant": "purple"
+    },
+    {
+      "id": "hub-file-attachments",
+      "category": "hub",
+      "title": "External File Cards",
+      "description": "Cloud links from providers like MEGA, Drive, Dropbox, Gofile, and Pixeldrain can render as richer file bubbles for BetterGram users.",
+      "icon": "FileBox",
+      "badge": "Hub optional",
+      "badgeVariant": "purple"
+    },
+    {
+      "id": "bulk-download",
+      "category": "media",
+      "title": "Bulk Media Download",
+      "description": "Right-click a chat and download recent media in batches instead of saving every file one by one.",
+      "icon": "Download",
+      "badge": null,
+      "badgeVariant": null
+    },
+    {
+      "id": "voice-miniplayer",
+      "category": "media",
+      "title": "Floating Voice Mini-Player",
+      "description": "Use a compact always-on-top window for active voice chats with speaking indicators and call controls.",
+      "icon": "PictureInPicture2",
+      "badge": "New",
+      "badgeVariant": "blue"
+    }
+  ],
+
+  "hubExplainer": {
+    "headline": "How to set up and use a BetterGram Hub",
+    "subheadline": "Optional community extras for BetterGram users.",
+    "defaultUrl": "http://localhost:8080",
+    "defaultName": "BetterGram Local Hub",
+    "adminToken": "bettergram-local-admin",
+    "description": "A Hub is a lightweight server you connect from Settings > BetterGram. It does not replace Telegram login. It only adds shared BetterGram extras like badges, profile colors, hub themes, announcements, and external file cards.",
+    "points": [
+      {
+        "icon": "UserCheck",
+        "title": "Run or choose a hub",
+        "description": "Use a public hub URL, or self-host bettergram-hub with Docker on your own machine, VPS, or community server."
+      },
+      {
+        "icon": "Database",
+        "title": "Set the hub URL",
+        "description": "In BetterGram, open Settings > BetterGram > Hub and paste http://localhost:8080. Add the admin token only if you manage that hub."
+      },
+      {
+        "icon": "Network",
+        "title": "Configure community extras",
+        "description": "Admins can assign badges, colors, announcements, and theme palettes. Users can set their profile extras where the hub allows it."
+      },
+      {
+        "icon": "Eye",
+        "title": "Telegram stays normal",
+        "description": "The hub does not receive Telegram credentials or replace MTProto. Non-BetterGram users simply see normal Telegram content."
+      }
+    ],
+    "capabilities": [
+      "Custom profile colors",
+      "Animated avatar URLs",
+      "Role badges",
+      "External file cards",
+      "Custom BetterGram reactions",
+      "Hub theme palettes",
+      "Hub announcements"
+    ]
+  },
+
+  "installSteps": [
+    {
+      "step": 1,
+      "title": "Clone the BetterGram client",
+      "code": "git clone --recursive https://github.com/bettergram/tdesktop.git\ncd tdesktop"
+    },
+    {
+      "step": 2,
+      "title": "Install build dependencies",
+      "code": "# Windows builds use the Telegram Desktop dependency layout.\n# Install Visual Studio, CMake, Python, Git, and the Telegram third-party libraries.\n\n# Linux example\nsudo apt install cmake ninja-build python3 git"
+    },
+    {
+      "step": 3,
+      "title": "Build the app",
+      "code": "cmake --build out --config Debug --target Telegram --parallel"
+    },
+    {
+      "step": 4,
+      "title": "Run and sign in",
+      "code": "# Windows debug build\nout/Debug/Telegram.exe\n\n# Enter your Telegram phone number and finish the normal login flow."
+    }
+  ],
+
+  "faq": [
+    {
+      "q": "What do I do first after launching BetterGram?",
+      "a": "Enter your Telegram phone number, confirm the login code, and finish 2FA if enabled. Then open Settings > BetterGram and turn on the features you want."
+    },
+    {
+      "q": "Do I need a hub?",
+      "a": "No. Use BetterGram without a hub for local client features. Hubs are only for shared extras such as badges, profile colors, reactions, announcements, external file cards, and hub themes."
+    },
+      {
+        "q": "How do I connect a hub?",
+      "a": "Open Settings > BetterGram > Hub, paste http://localhost:8080, save, and restart if the feature asks for it. The local Docker tutorial uses admin token bettergram-local-admin for admin-only actions."
+    },
+    {
+      "q": "Can normal Telegram users see hub features?",
+      "a": "No. Hub features render only for BetterGram users connected to the same hub. Everyone else sees normal Telegram messages and links."
+    },
+    {
+      "q": "How do ghost messages look?",
+      "a": "Deleted incoming messages stay visible locally and are shown greyed out. BetterGram does not draw a Deleted badge or icon over the content."
+    }
+  ],
+
+  "footer": {
+    "links": [
+      { "label": "GitHub", "href": "https://github.com/bettergram/tdesktop" },
+      { "label": "Hub Server", "href": "https://github.com/bettergram/hub" },
+      { "label": "Releases", "href": "https://github.com/bettergram/tdesktop/releases" },
+      { "label": "Issues", "href": "https://github.com/bettergram/tdesktop/issues" }
+    ],
+    "notice": "BetterGram is not affiliated with Telegram Messenger Inc. Built on Telegram Desktop (GPLv3)."
+  }
+}
