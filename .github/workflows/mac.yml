@@ -79,6 +79,8 @@ jobs:
 
       - name: Libraries.
         run: |
+          chmod +x $REPO_NAME/tdesktop-dev/Telegram/build/prepare/mac.sh
+          chmod +x $REPO_NAME/tdesktop-dev/Telegram/configure.sh
           ./$REPO_NAME/tdesktop-dev/Telegram/build/prepare/mac.sh skip-release silent
 
       - name: Free up some disk space.

@@ -131,7 +131,7 @@ jobs:
           -e CONFIG=Debug \
           -e CCACHE_SLOPPINESS=pch_defines,time_macros \
           $IMAGE_TAG \
-          env -u CCACHE_DISABLE /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
+          env -u CCACHE_DISABLE bash /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_CONFIGURATION_TYPES=Debug \
           -D CMAKE_C_FLAGS_DEBUG="-O0 -fpch-preprocess -fuse-ld=lld" \
           -D CMAKE_CXX_FLAGS_DEBUG="-O0 -fpch-preprocess -fuse-ld=lld" \
